@@ -1,60 +1,123 @@
 package com.coopera.stream_chat_real_time_demo.ui.users
 
 import android.os.Bundle
+import android.util.Log
+import android.view.*
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SearchView
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.coopera.stream_chat_real_time_demo.R
+import com.coopera.stream_chat_real_time_demo.adapter.UsersAdapter
+import com.coopera.stream_chat_real_time_demo.databinding.FragmentUsersBinding
+import io.getstream.chat.android.client.ChatClient
+import io.getstream.chat.android.client.api.models.QueryUsersRequest
+import io.getstream.chat.android.client.models.Filters
+import io.getstream.chat.android.client.models.User
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [UsersFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class UsersFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private var _binding: FragmentUsersBinding? = null
+    private val binding get() = _binding!!
+
+    private val usersAdapter by lazy { UsersAdapter() }
+
+    private val client = ChatClient.instance()
+
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_users, container, false)
+        _binding = FragmentUsersBinding.inflate(inflater, container, false)
+
+        setHasOptionsMenu(true)
+        (activity as AppCompatActivity).setSupportActionBar(binding.toolbar)
+
+        setupToolbar()
+        setupRecyclerView()
+        queryAllUsers()
+
+        return binding.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment UsersFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            UsersFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.users_menu, menu)
+        val search = menu.findItem(R.id.menu_search)
+        val searchView = search.actionView as? SearchView
+        searchView?.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                return false
             }
+
+            override fun onQueryTextChange(query: String?): Boolean {
+                if (query!!.isEmpty()) {
+                    queryAllUsers()
+                } else {
+                    searchUser(query)
+                }
+                return true
+            }
+        })
+        searchView?.setOnCloseListener {
+            queryAllUsers()
+            false
+        }
     }
+
+    private fun setupToolbar() {
+        binding.toolbar.setNavigationOnClickListener {
+            requireActivity().onBackPressed()
+        }
+    }
+
+    private fun setupRecyclerView() {
+        binding.usersRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.usersRecyclerView.adapter = usersAdapter
+    }
+
+    private fun searchUser(query: String) {
+        val filters = Filters.and(
+            Filters.autocomplete("id", query),
+            Filters.ne("id", client.getCurrentUser()!!.id)
+        )
+        val request = QueryUsersRequest(
+            filter = filters,
+            offset = 0,
+            limit = 100
+        )
+        client.queryUsers(request).enqueue { result ->
+            if (result.isSuccess) {
+                val users: List<User> = result.data()
+                usersAdapter.setData(users)
+            } else {
+                Log.e("UsersFragment", result.error().message.toString())
+            }
+        }
+    }
+
+    private fun queryAllUsers() {
+        val request = QueryUsersRequest(
+            filter = Filters.ne("id", client.getCurrentUser()!!.id),
+            offset = 0,
+            limit = 100
+        )
+        client.queryUsers(request).enqueue { result ->
+            if (result.isSuccess) {
+                val users: List<User> = result.data()
+                usersAdapter.setData(users)
+            } else {
+                Log.e("UsersFragment", result.error().message.toString())
+            }
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
+
 }

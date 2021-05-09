@@ -28,13 +28,26 @@
         tools:layout="@layout/fragment_channel" >
         <action
             android:id="@+id/action_channelFragment_to_chatFragment"
-            app:destination="@id/chatFragment" />
+            app:destination="@id/chatFragment"
+            app:enterAnim="@anim/from_right"
+            app:exitAnim="@anim/to_left"
+            app:popEnterAnim="@anim/from_left"
+            app:popExitAnim="@anim/to_right" />
         <action
             android:id="@+id/action_channelFragment_to_usersFragment"
-            app:destination="@id/usersFragment" />
+            app:destination="@id/usersFragment"
+            app:enterAnim="@anim/from_bottom"
+            app:exitAnim="@anim/to_top"
+            app:popEnterAnim="@anim/from_top"
+            app:popExitAnim="@anim/to_bottom" />
         <action
             android:id="@+id/action_channelFragment_to_loginFragment"
-            app:destination="@id/loginFragment" />
+            app:destination="@id/loginFragment"
+            app:enterAnim="@anim/from_top"
+            app:exitAnim="@anim/to_bottom"
+            app:launchSingleTop="true"
+            app:popUpTo="@id/channelFragment"
+            app:popUpToInclusive="true"/>
         <argument
             android:name="chatUser"
             app:argType="com.coopera.stream_chat_real_time_demo.model.ChatUser" />
@@ -55,6 +68,12 @@
         android:id="@+id/usersFragment"
         android:name="com.coopera.stream_chat_real_time_demo.ui.users.UsersFragment"
         android:label="UsersFragment"
-        tools:layout="@layout/fragment_users" />
+        tools:layout="@layout/fragment_users" >
+        <action
+            android:id="@+id/action_usersFragment_to_chatFragment"
+            app:destination="@id/chatFragment"
+            app:popUpTo="@id/usersFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
 
 </navigation>
