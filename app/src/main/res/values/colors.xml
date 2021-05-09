@@ -12,5 +12,8 @@
     <color name="darkGray">#121212</color>
     <color name="green">#FF03DAC5</color>
 
+    <color name="toolbarBarColor">@color/white</color>
+    <color name="titleColor">@color/black</color>
+
 
 </resources>
