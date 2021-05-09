@@ -47,6 +47,9 @@
         <action
             android:id="@+id/action_chatFragment_to_channelFragment"
             app:destination="@id/channelFragment" />
+        <argument
+            android:name="channelId"
+            app:argType="string" />
     </fragment>
     <fragment
         android:id="@+id/usersFragment"
